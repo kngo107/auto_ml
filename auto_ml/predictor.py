@@ -1961,3 +1961,4 @@ class Predictor(object):
 
         # ensembler will be added to pipeline later back inside main train section
         self.trained_final_model = ensembler
+
