@@ -22,20 +22,22 @@ def _save_obj(obj, name, dir_name):
         #for a performance boost use 
         #pickle.dump(obj, f, pickle.HIGHEST_PROTOCOL)
 
-def test_with_all_data(dataset, save_to):
+def test_with_all_data(dataset, save_to, dry_run = False):
     count = 1
     metrics, total_training_size = _get_metrics(dataset, 1, save_to)
-    _save_obj(metrics, "basic_test", save_to)
-    for metric, data in metrics.iteritems():
+    if not dry_run:
+        _save_obj(metrics, "basic_test", save_to)
+    for metric, data in metrics.items():
         plt.figure(count)
         count +=1
         plot_metric(metric,data)
 
-def test_data_size(dataset, save_to):
+def test_data_size(dataset, save_to, dry_run = False):
     count = 1
-    metrics, total_training_size = _get_metrics(dataset, 1, save_to)
-    _save_obj(metrics, "datasize_vs_performance", save_to)
-    for metric, data in metrics.iteritems():
+    metrics, total_training_size = _get_metrics(dataset, 1, save_to, dry_run)
+    if not dry_run:
+        _save_obj(metrics, "datasize_vs_performance", save_to)
+    for metric, data in metrics.items():
         plt.figure(count)
         count +=1
         plot_dataset_num_metric(metric,data, total_training_size)
@@ -43,14 +45,14 @@ def test_data_size(dataset, save_to):
 def load_and_graph_data(filename):
     count = 1
     metrics = json.load(open(filename))
-    for metric, data in metrics.iteritems():
+    for metric, data in metrics.items():
         plt.figure(count)
         count +=1
         plot_dataset_num_metric(metric,data, 515345)
     
 
 
-def _get_metrics(dataset, n_fold, dir_name):
+def _get_metrics(dataset, n_fold, dir_name, dry_run):
     results = dict()
     #Get metrics for all datasets
     while (dataset):
@@ -75,10 +77,10 @@ def _get_metrics(dataset, n_fold, dir_name):
             
             ml_predictor.train(train_set, verbose=None, compare_all_models = True, optimize_final_model = None, perform_feature_selection = True)
 
-            if not os.path.exists(os.path.dirname(dir_name+"models/")):
-                os.makedirs(os.path.dirname(dir_name+"models/"))
-
-            ml_predictor.save(file_name="{}models/{}_model".format(dir_name, dataset_name.replace(" ","_")))
+            if not dry_run:
+                if not os.path.exists(os.path.dirname(dir_name+"models/")):
+                    os.makedirs(os.path.dirname(dir_name+"models/"))
+                ml_predictor.save(file_name="{}models/{}_model".format(dir_name, dataset_name.replace(" ","_")))
 
             y_auto_ml_predicted = ml_predictor.predict(test_set)
 
@@ -87,7 +89,7 @@ def _get_metrics(dataset, n_fold, dir_name):
 
             if problem_type == 'regressor':
                 train_set_y = np.asarray(train_set[output], dtype=np.int64)
-                mlp = neural_network.MLPRegressor(hidden_layer_sizes=(20,20,20), max_iter = 500)
+                mlp = neural_network.MLPRegressor(hidden_layer_sizes=(20,20,20), max_iter = 1000)
                 mlp.fit(train_set_x,train_set_y)
             else:
                 train_set_y = np.asarray(train_set[output], dtype=np.int64)
@@ -110,7 +112,7 @@ def _get_metrics(dataset, n_fold, dir_name):
 
 
         #Take average
-        for test, data in result.iteritems():
+        for test, data in result.items():
             if not test in results:
                 results[test] = dict()
             results[test][dataset_name] = data[dataset_name]  
@@ -122,10 +124,10 @@ def _get_metrics(dataset, n_fold, dir_name):
     
 
 if __name__ == "__main__":
-    #dir_name = "./results/{}/".format(datetime.datetime.now().strftime('%Y_%m_%d_%H_%M_%S'))
-    #data_size_list = get_dataset_size_list('songs') 
+    dir_name = "./results/{}/".format(datetime.datetime.now().strftime('%Y_%m_%d_%H_%M_%S'))
+    data_size_list = get_dataset_size_list('boston') 
     
-    #test_data_size(data_size_list, dir_name)
-    load_and_graph_data("/home/khai/ThesisProject/khai_auto_ml/results/2018_01_22_20_55_25/datasize_vs_performance.txt")
+    test_data_size(data_size_list, dir_name, True)
+    #load_and_graph_data("/home/khai/ThesisProject/khai_auto_ml/results/2018_01_22_20_55_25/datasize_vs_performance.txt")
 
 

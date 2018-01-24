@@ -30,7 +30,7 @@ def plot_metric(metric, data):
     mlp_score = []
     x_label = []
     #==================================================================
-    for dataset_name,scores in data.iteritems():
+    for dataset_name,scores in data.items():
         n_groups +=1
         x_label.append(dataset_name)
         auto_ml_score.append(scores['auto_ml'])
@@ -64,7 +64,7 @@ def plot_dataset_num_metric(metric, data, total_training_size):
     x_label = []
     
     #==================================================================
-    for dataset_name,scores in sorted(data.iteritems()):
+    for dataset_name,scores in sorted(data.items()):
         n_groups +=1
         x_label.append(dataset_name)
         auto_ml_score.append(scores['auto_ml'])
@@ -82,11 +82,11 @@ def get_dataset_size_list(dataset):
     if 'boston' in dataset:
         for i in range(10,100,10):
             output_list.append("{} {}".format(dataset,i))
-    if 'songs' in dataset:
+    elif 'songs' in dataset:
         for i in range(10,50,5):
             output_list.append("{} {}".format(dataset,i))
     else:
-        print "Your dataset is not existed in the database"
+        print ("Your dataset is not existed in the database")
         exit()
     return output_list
 
@@ -185,7 +185,7 @@ def get_data_for_testing(dataset_name):
         train_set = train_set.iloc[:int((training_fraction/100.0)*train_set.shape[0])]
 
     else:
-        print "{} doesn't existed in the database 1".format(dataset_name)
+        print ("{} doesn't existed in the database 1".format(dataset_name))
         exit()
 
     return problem_type, output, column_descriptions, train_set, test_set, total_training_size
