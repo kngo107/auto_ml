@@ -1092,7 +1092,10 @@ class Predictor(object):
             n_jobs = 1
 
         elif total_combinations >= 50:
-            n_jobs = multiprocessing.cpu_count()
+            n_jobs = multiprocessing.cpu_count()/2
+
+        n_jobs = multiprocessing.cpu_count()/2
+
 
         fit_evolutionary_search = False
         if total_combinations >= 50 and model_name not in ['CatBoostClassifier', 'CatBoostRegressor']:

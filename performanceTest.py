@@ -1,6 +1,5 @@
 from auto_ml import Predictor
-from auto_ml.utils_performance import plot_metric
-from auto_ml.utils_performance import get_data_for_testing
+from auto_ml.utils_performance import *
 
 import copy
 
@@ -15,30 +14,49 @@ from sklearn import neural_network
 import matplotlib.pyplot as plt
 
 
-def _saveObj(obj, name):
-    if not os.path.exists(os.path.dirname('./results/' + name)):
-        os.makedirs(os.path.dirname('./results/' + name))
-    with open('./results/' + name + datetime.datetime.now().strftime('%Y_%m_%d_%H_%M_%S') +'.txt', 'wb+') as f:
+def _save_obj(obj, name, dir_name):
+    if not os.path.exists(os.path.dirname(dir_name + name)):
+        os.makedirs(os.path.dirname(dir_name+ name))
+    with open(dir_name + name +'.txt', 'wb+') as f:
         json.dump(obj, f)
         #for a performance boost use 
         #pickle.dump(obj, f, pickle.HIGHEST_PROTOCOL)
 
-def _testWithData(dataset):
+def test_with_all_data(dataset, save_to):
     count = 1
-    metrics = _getMetrics(dataset, 1)
-    _saveObj(metrics, "basic_test_")
+    metrics, total_training_size = _get_metrics(dataset, 1, save_to)
+    _save_obj(metrics, "basic_test", save_to)
     for metric, data in metrics.iteritems():
         plt.figure(count)
         count +=1
         plot_metric(metric,data)
 
-def _getMetrics(dataset, n_fold):
+def test_data_size(dataset, save_to):
+    count = 1
+    metrics, total_training_size = _get_metrics(dataset, 1, save_to)
+    _save_obj(metrics, "datasize_vs_performance", save_to)
+    for metric, data in metrics.iteritems():
+        plt.figure(count)
+        count +=1
+        plot_dataset_num_metric(metric,data, total_training_size)
+
+def load_and_graph_data(filename):
+    count = 1
+    metrics = json.load(open(filename))
+    for metric, data in metrics.iteritems():
+        plt.figure(count)
+        count +=1
+        plot_dataset_num_metric(metric,data, 515345)
+    
+
+
+def _get_metrics(dataset, n_fold, dir_name):
     results = dict()
     #Get metrics for all datasets
     while (dataset):
         dataset_name = dataset[0]
 
-        problem_type, output, column_descriptions, train_set, test_set = get_data_for_testing(dataset_name)
+        problem_type, output, column_descriptions, train_set, test_set, total_training_size = get_data_for_testing(dataset_name)
 
 
         if problem_type == 'regressor':
@@ -55,7 +73,12 @@ def _getMetrics(dataset, n_fold):
             ml_predictor = Predictor(type_of_estimator=problem_type, column_descriptions=column_descriptions)
            # train_set_transformed = ml_predictor.transform_only(train_set)
             
-            ml_predictor.train(train_set, verbose=False, compare_all_models = True)
+            ml_predictor.train(train_set, verbose=None, compare_all_models = True, optimize_final_model = None, perform_feature_selection = True)
+
+            if not os.path.exists(os.path.dirname(dir_name+"models/")):
+                os.makedirs(os.path.dirname(dir_name+"models/"))
+
+            ml_predictor.save(file_name="{}models/{}_model".format(dir_name, dataset_name.replace(" ","_")))
 
             y_auto_ml_predicted = ml_predictor.predict(test_set)
 
@@ -94,6 +117,15 @@ def _getMetrics(dataset, n_fold):
                 
 
         del dataset[0]
-    return results
+    return results, total_training_size
 
-_testWithData(['boston'])
+    
+
+if __name__ == "__main__":
+    #dir_name = "./results/{}/".format(datetime.datetime.now().strftime('%Y_%m_%d_%H_%M_%S'))
+    #data_size_list = get_dataset_size_list('songs') 
+    
+    #test_data_size(data_size_list, dir_name)
+    load_and_graph_data("/home/khai/ThesisProject/khai_auto_ml/results/2018_01_22_20_55_25/datasize_vs_performance.txt")
+
+
